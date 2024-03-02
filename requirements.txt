@@ -2,3 +2,9 @@ fastapi
 SQLAlchemy
 python-dotenv
 uvicorn
+openai
+pydantic
+langchain
+langchain-community
+langchain_openai
+psycopg2

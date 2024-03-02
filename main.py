@@ -14,7 +14,7 @@ app = FastAPI(
 )
 
 origins = [
-    'https://scorelab.pe'
+    'https://scorelab.pe',
     'http://localhost:5173'
 ]
 

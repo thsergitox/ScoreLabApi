@@ -41,9 +41,11 @@ async def create_user(user: CreateUser) -> dict:
 
 @router.get('/{username}')
 async def get_user_data(username: str) -> dict:
-    user = db.query(User).filter(User.username == username).first()
-    if user:
-        return {'user_id': user.id, 'username': user.username, 'name': user.name}
-    else:
-        return {'message': 'User not found'}
-
+    try:
+        user = db.query(User).filter(User.username == username).first()
+        if user:
+            return {'user_id': user.id, 'username': user.username, 'name': user.name}
+        else:
+            return {'message': 'User not found'}
+    except DatabaseError:
+        return {'error': 'I dunno'}

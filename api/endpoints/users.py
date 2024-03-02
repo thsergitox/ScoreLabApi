@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from sqlalchemy.exc import DatabaseError
 
 from db.models import User
 from db.session import SessionLocal
@@ -20,16 +21,22 @@ class GetUser(BaseModel):
 
 @router.post('/create')
 async def create_user(user: CreateUser) -> dict:
-    new_user = User(
-        username=user.username,
-        name=user.name,
-        password=user.password
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        new_user = User(
+            username=user.username,
+            name=user.name,
+            password=user.password
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    return {'message': 'User created'}
+        return {'message': 'User created'}
+
+    except DatabaseError:
+        return {'message': 'Username has already existed'}
+
+
 
 
 @router.get('/{username}')

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
-import json
+from sqlalchemy.exc import DatabaseError
 
 from db.models import Questionnaire
 from db.session import SessionLocal
@@ -43,17 +43,21 @@ async def root(req: ModelRequest):
     else:
         response = "Invalid type"
 
-    new_questionnaire = Questionnaire(
-        user_id=1,
-        title=theme,
-        description={"subthemes": subthemes, "content": content, "language": language, "kind": kind},
-        questions={"questions": response}
-    )
-    db.add(new_questionnaire)
-    db.commit()
-    db.refresh(new_questionnaire)
+    try:
 
-    return {'res': response}
+        new_questionnaire = Questionnaire(
+            user_id=1,
+            title=theme,
+            description={"subthemes": subthemes, "content": content, "language": language, "kind": kind},
+            questions={"questions": response}
+        )
+        db.add(new_questionnaire)
+        db.commit()
+        db.refresh(new_questionnaire)
+
+        return {'res': response}
+    except DatabaseError:
+        return {'res': 'User does not exist or bad query'}
 
 
 @router.get('/{id}')

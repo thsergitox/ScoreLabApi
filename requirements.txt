@@ -5,6 +5,7 @@ uvicorn
 openai
 pydantic
 langchain
-langchain-community
 langchain_openai
 psycopg2
+langchain-community
+pypdf

@@ -5,44 +5,48 @@ from config import settings
 
 OPENAI_API_KEY = settings.OPENAI_API_KEY
 NUM_OPTIONS = 3 # Define the number of options for multiple choice questions
-MODEL = "gpt-3.5-turbo"
-
+MODEL = "gpt-3.5-turbo-0125"
+TEMPERATURE = 0.5
 
 class ShortAnswer:
     def __init__(self):
         self.schema = {
             "type": "object",
             "properties": {
-                "questions": {
+                "questions_array": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "question": {"type": "string"},
-                            "answer": {"type": "string"},
+                            "pregunta": {"type": "string"},
+                            "respuesta": {"type": "string"},
                         },
-                        "required": ["question", "answer"],
+                        "required": ["pregunta", "respuesta"],
                     },
                 },
             },
-            "required": ["questions"],
+            "required": ["questions_array"],
         }
 
-
-        self.llm = ChatOpenAI(temperature=0, model=MODEL, api_key=OPENAI_API_KEY)
+        self.llm = ChatOpenAI(temperature=TEMPERATURE, model=MODEL, api_key=OPENAI_API_KEY)
         self.chain = create_extraction_chain(self.schema, self.llm)
 
-    def generate_questions_json(self, theme, subthemes, content, language):
+    def generate_questions_json(self, theme, subthemes, content):
         # Format the subthemes and types for the prompt
         formatted_subthemes = ', '.join(subthemes)
 
         # Insert data into the template
-        query = f"""Generate a list of question-answer pairs based on the theme {theme}, generate  covering the subthemes {formatted_subthemes}; in the language {language}. Here is the content: {content} """
+        query = f"""Genera una lista de pares pregunta-respuesta en Español basados en el tema {theme}, cubriendo los subtemas {formatted_subthemes}. 
+Aquí está el texto de contenido delimitado por comillas triples: 
+\""" 
+{content} 
+\""" 
+"""
 
         # Call the model with the formatted prompt
         response = self.chain.invoke(query)
 
-        return response
+        return response['text'][0]['questions_array']
 
 
 class MultipleChoice:
@@ -50,72 +54,81 @@ class MultipleChoice:
         self.schema = {
             "type": "object",
             "properties": {
-                "questions": {
+                "questions_array": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "question": {"type": "string"},
-                            "options": {
+                            "pregunta": {"type": "string"},
+                            "opciones": {
                                 "type": "array",
                                 "items": {"type": "string"},
                                 "minItems": NUM_OPTIONS,
                             },
-                            "answer": {"type": "string"},  # Correct option
+                            "respuesta": {"type": "string"},  # Correct option
                         },
-                        "required": ["question", "options", "answer"],
+                        "required": ["pregunta", "opciones", "respuesta"],
                     },
                 },
             },
-            "required": ["questions"],
+            "required": ["questions_array"],
         }
 
-        self.llm = ChatOpenAI(temperature=0, model=MODEL, api_key=OPENAI_API_KEY)
+        self.llm = ChatOpenAI(temperature=TEMPERATURE, model=MODEL, api_key=OPENAI_API_KEY)
         self.chain = create_extraction_chain(self.schema, self.llm)
 
-    def generate_questions_json(self, theme, subthemes, content, language):
+    def generate_questions_json(self, theme, subthemes, content):
         # Format the subthemes and types for the prompt
         formatted_subthemes = ', '.join(subthemes)
 
         # Insert data into the template
-        query = f"""Generate a list of multiple-choice questions based on the theme {theme}, covering the subthemes {formatted_subthemes}; include questions, options for answers, and indicate the correct answer, in {language}. Here is the content: {content}"""
+        query = f"""Genera una lista de preguntas de opción múltiple en Español basadas en el tema {theme}, cubriendo los subtemas {formatted_subthemes}; incluye preguntas, opciones de respuestas e indica la respuesta correcta (solo una opción). 
+Aquí está el texto de contenido delimitado por comillas triples: 
+\""" 
+{content} 
+\""" 
+"""
 
         # Call the model with the formatted prompt
         response = self.chain.invoke(query)
 
-        return response
+        return response['text'][0]['questions_array']
 
 class TrueFalse:
     def __init__(self):
         self.schema = {
             "type": "object",
             "properties": {
-                "questions": {
+                "questions_array": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "statement": {"type": "string"},
+                            "afirmación": {"type": "string"},
                             "truth_value": {"type": "boolean"},  # True or False
                         },
-                        "required": ["statement", "truth_value"],
+                        "required": ["afirmación", "truth_value"],
                     },
                 },
             },
-            "required": ["questions"],
+            "required": ["questions_array"],
         }
 
-        self.llm = ChatOpenAI(temperature=0, model=MODEL, api_key=OPENAI_API_KEY)
+        self.llm = ChatOpenAI(temperature=TEMPERATURE, model=MODEL, api_key=OPENAI_API_KEY)
         self.chain = create_extraction_chain(self.schema, self.llm)
 
-    def generate_questions_json(self, theme, subthemes, content, language):
+    def generate_questions_json(self, theme, subthemes, content):
         # Format the subthemes and types for the prompt
         formatted_subthemes = ', '.join(subthemes)
 
         # Insert data into the template
-        query = f"""Generate a list of true/false statements based on the theme {theme}, covering the subthemes {formatted_subthemes}; include the statement and its truth value (true or false), in {language}. Here is the content: {content}"""
-
+        query = f"""Genera una lista de 15 afirmaciones verdadero/falso en Español basadas en el tema {theme}, cubriendo los subtemas {formatted_subthemes}; incluye la afirmación y su valor de verdad (verdadero o falso).  
+Aquí está el texto del contenido delimitado por comillas triples: 
+\""" 
+{content} 
+\""" 
+"""
         # Call the model with the formatted prompt
         response = self.chain.invoke(query)
 
-        return response
+        return response['text'][0]['questions_array']

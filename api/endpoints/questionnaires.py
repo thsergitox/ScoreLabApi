@@ -19,7 +19,6 @@ class ModelRequest(BaseModel):
     kind: int
     theme: str
     subThemes: List[str]
-    language: str
     content: str
 
 
@@ -31,15 +30,14 @@ async def root(req: ModelRequest):
     kind = req.kind
     theme = req.theme
     subthemes = req.subThemes
-    language = req.language
     content = req.content
 
     if kind == 1:
-        response = shortAnswer.generate_questions_json(theme, subthemes, content, language)['text'][0]['questions']
+        response = shortAnswer.generate_questions_json(theme, subthemes, content)
     elif kind == 2:
-        response = multipleChoice.generate_questions_json(theme, subthemes, content, language)['text'][0]['questions']
+        response = multipleChoice.generate_questions_json(theme, subthemes, content)
     elif kind == 3:
-        response = trueFalse.generate_questions_json(theme, subthemes, content, language)['text'][0]['questions']
+        response = trueFalse.generate_questions_json(theme, subthemes, content)
     else:
         response = "Invalid type"
 
@@ -48,7 +46,7 @@ async def root(req: ModelRequest):
         new_questionnaire = Questionnaire(
             user_id=1,
             title=theme,
-            description={"subthemes": subthemes, "content": content, "language": language, "kind": kind},
+            description={"subthemes": subthemes, "content": content, "kind": kind},
             questions={"questions": response}
         )
         db.add(new_questionnaire)

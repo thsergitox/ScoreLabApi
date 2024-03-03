@@ -60,7 +60,7 @@ async def root(req: ModelRequest,  db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_questionnaire)
 
-        return {'res': response}
+        return {'res': response, "id": new_questionnaire.id}
     except DatabaseError:
         return {'res': 'User does not exist or bad query'}
 

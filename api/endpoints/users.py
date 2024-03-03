@@ -1,12 +1,13 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy.exc import DatabaseError
+from sqlalchemy.orm import Session
+from fastapi import Depends
 
 from db.models import User
 from db.session import SessionLocal
 
 router = APIRouter()
-db = SessionLocal()
 
 
 class CreateUser(BaseModel):
@@ -15,12 +16,16 @@ class CreateUser(BaseModel):
     password: str
 
 
-class GetUser(BaseModel):
-    username: str
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @router.post('/create')
-async def create_user(user: CreateUser) -> dict:
+async def create_user(user: CreateUser,  db: Session = Depends(get_db)) -> dict:
     try:
         new_user = User(
             username=user.username,
@@ -40,7 +45,7 @@ async def create_user(user: CreateUser) -> dict:
 
 
 @router.get('/{username}')
-async def get_user_data(username: str) -> dict:
+async def get_user_data(username: str,  db: Session = Depends(get_db)) -> dict:
     try:
         user = db.query(User).filter(User.username == username).first()
         if user:

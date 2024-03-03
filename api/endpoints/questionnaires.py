@@ -2,17 +2,27 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.exc import DatabaseError
+from sqlalchemy.orm import Session
+from fastapi import Depends
 
 from db.models import Questionnaire
 from db.session import SessionLocal
 from openai_connection.models import ShortAnswer, MultipleChoice, TrueFalse
 
 router = APIRouter()
-db = SessionLocal()
+
 
 shortAnswer = ShortAnswer()
 multipleChoice = MultipleChoice()
 trueFalse = TrueFalse()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 class ModelRequest(BaseModel):
@@ -22,11 +32,8 @@ class ModelRequest(BaseModel):
     content: str
 
 
-class GetQuestionnaire(BaseModel):
-    id: int
-
 @router.post('/create')
-async def root(req: ModelRequest):
+async def root(req: ModelRequest,  db: Session = Depends(get_db)):
     kind = req.kind
     theme = req.theme
     subthemes = req.subThemes
@@ -59,7 +66,7 @@ async def root(req: ModelRequest):
 
 
 @router.get('/{id}')
-async def get_questionnaire(id: int) -> dict:
+async def get_questionnaire(id: int, db: Session = Depends(get_db)) -> dict:
     questionnaire = db.query(Questionnaire).filter(Questionnaire.id == id).first()
     if questionnaire:
         return {'title': questionnaire.title, 'description': questionnaire.description, 'questions': questionnaire.questions}

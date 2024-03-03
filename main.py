@@ -14,7 +14,7 @@ app = FastAPI(
 )
 
 origins = [
-    'https://scorelab-8v6ro6sbn-pezosergios-projects.vercel.app',
+    'https://scorelab-eight.vercel.app',
     'http://localhost:5173'
 ]
 
